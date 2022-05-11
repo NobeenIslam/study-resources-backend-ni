@@ -19,7 +19,6 @@ CREATE TABLE resources (
   	origin VARCHAR,
   	author_id INTEGER,
   	creation_date TIMESTAMP DEFAULT current_timestamp,
-  	-- votes INTEGER DEFAULT 0 NOT NULL,
   	content_type VARCHAR NOT NULL,
   	recommended_week VARCHAR,
   	evaluation VARCHAR,	
@@ -29,9 +28,15 @@ CREATE TABLE resources (
 
 CREATE TABLE tags(
 	id SERIAL PRIMARY KEY NOT NULL,
-  	name VARCHAR UNIQUE NOT NULL,
-  	resource_id INTEGER,
-  	FOREIGN KEY (resource_id) REFERENCES resources(id)
+  	name VARCHAR UNIQUE NOT NULL
+);
+
+CREATE TABLE tag_assignments(
+	id SERIAL PRIMARY KEY NOT NULL,
+	tag_id INTEGER,
+	resource_id INTEGER,
+	FOREIGN KEY (tag_id) REFERENCES tags(id),
+	FOREIGN KEY (resource_id) REFERENCES resources(id)
 );
 
 CREATE TABLE comments(
