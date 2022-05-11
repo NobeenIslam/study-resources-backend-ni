@@ -1,10 +1,9 @@
+DROP TABLE IF EXISTS votes;
 DROP TABLE IF EXISTS study_list;
 DROP TABLE IF EXISTS comments;
 DROP TABLE IF EXISTS tags;
 DROP TABLE IF EXISTS resources;
 DROP TABLE IF EXISTS users;
-
-
 
 CREATE TABLE users (
 	id SERIAL PRIMARY KEY NOT NULL,
@@ -20,7 +19,7 @@ CREATE TABLE resources (
   	origin VARCHAR,
   	author_id INTEGER,
   	creation_date TIMESTAMP DEFAULT current_timestamp,
-  	votes INTEGER DEFAULT 0 NOT NULL,
+  	-- votes INTEGER DEFAULT 0 NOT NULL,
   	content_type VARCHAR NOT NULL,
   	recommended_week VARCHAR,
   	evaluation VARCHAR,	
@@ -50,6 +49,15 @@ CREATE TABLE study_list(
   	resource_id INTEGER,
   	FOREIGN KEY (author_id) REFERENCES users(id),
     FOREIGN KEY (resource_id) REFERENCES resources(id)
+);
+
+CREATE TABLE votes(
+	id SERIAL PRIMARY KEY NOT NULL,
+	user_id INTEGER,
+	resource_id INTEGER,
+	is_upvote BOOLEAN NOT NULL,
+	FOREIGN KEY (user_id) REFERENCES users(id),
+	FOREIGN KEY (resource_id) REFERENCES users(id)
 );
 
 
