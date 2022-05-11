@@ -29,7 +29,7 @@ client.connect();
 //Get everything from resources table
 app.get("/resources", async (req, res) => {
   try {
-    const dbres = await client.query('SELECT * FROM resources');
+    const dbres = await client.query('SELECT * FROM resources ORDER BY creation_date DESC');
     res.status(200).json(dbres.rows);
   } catch (error) {
     res.status(500).send({error: error, stack: error.stack})
@@ -82,7 +82,22 @@ app.get<{id: string},{},{}>("/resources/:id/comments", async(req,res) => {
   }
 })
 
-//Get a single user's study list
+//Get a single user's study list -- PLEASE CHECK GET REQUEST
+app.get<{id: string},{},{}>("/:id/studylist", async(req,res) => {
+  try {
+    const userId = parseInt(req.params.id)
+    const isThereUser = await client.query('SELECT * FROM users WHERE id = $1', [userId]);
+    if(isThereUser.rowCount<1){
+      res.status(400).send({error: `No User in database matching that id (${userId})`})
+    }else{
+      const dbres = await client.query(`SELECT * FROM study_list WHERE author_id = $1`,[userId])
+      res.status(200).json(dbres.rows);
+    }
+  } catch (error) {
+    res.status(500).send({error: error, stack: error.stack})
+  }
+})
+
 //Get all tags
 app.get("/tags", async(req,res) => {
   try {
@@ -94,7 +109,29 @@ app.get("/tags", async(req,res) => {
 })
 
 //Get all resources for a single tag
-
+app.get<{id: string},{},{}>("/tags/:id", async(req,res) => {
+  try {
+    const tagId = parseInt(req.params.id);
+    const isThereTag = await client.query('SELECT * FROM tags WHERE id = $1', [tagId]);
+    if(isThereTag.rowCount<1){
+      res.status(400).send({error: `No tag in database matching that id (${tagId})`})
+    }else{
+      const dbres = await client.query(`
+      SELECT * FROM tag_assignments
+      JOIN resources ON tag_assignments.resource_id = resources.id
+      JOIN tags ON tag_assignments.tag_id = tags.id
+      WHERE tag_assignments.tag_id = $1
+    `,[tagId]);
+      if(dbres.rowCount<1){
+        res.status(400).send({error: `No resources with (${tagId})`})
+      }else{
+        res.status(200).json(dbres.rows)
+      }
+    }
+  } catch (error) {
+    res.status(500).send({error: error, stack: error.stack})
+  }
+})
 
 
 
