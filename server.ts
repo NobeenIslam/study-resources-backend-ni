@@ -26,10 +26,80 @@ app.use(cors()) //add CORS support to each following route handler
 const client = new Client(dbConfig);
 client.connect();
 
-app.get("/", async (req, res) => {
-  const dbres = await client.query('select * from categories');
-  res.json(dbres.rows);
+//Get everything from resources table
+app.get("/resources", async (req, res) => {
+  try {
+    const dbres = await client.query('SELECT * FROM resources');
+    res.status(200).json(dbres.rows);
+  } catch (error) {
+    res.status(500).send({error: error, stack: error.stack})
+  }
 });
+
+//Get one resource from resources table
+app.get<{id: string},{},{}>("/resources/:id", async (req,res) => {
+  try {
+    const resourceId = parseInt(req.params.id);
+    const dbres = await client.query('SELECT * FROM resources WHERE id = $1', [resourceId]);
+    const rowCount = dbres.rowCount
+    if (rowCount < 1){
+      res.status(400).send({error: `No resource in database matching that id (${resourceId})`})
+    }else {
+      res.status(200).json(dbres.rows)
+    } 
+  } catch (error) {
+    res.status(500).send({error: error, stack: error.stack})
+  }
+})
+
+//Get list of users
+app.get("/users", async (req,res) => {
+  try {
+    const dbres = await client.query(`SELECT * FROM users`)
+    res.status(200).json(dbres.rows);
+  } catch (error) {
+    res.status(500).send({error: error, stack: error.stack})
+  }
+})
+
+//Get all comments for a resource
+app.get<{id: string},{},{}>("/resources/:id/comments", async(req,res) => {
+  try {
+    const resourceId = parseInt(req.params.id);
+    const isThereResource = await client.query('SELECT * FROM resources WHERE id = $1', [resourceId]);
+    if (isThereResource.rowCount < 1){
+      res.status(400).send({error: `No resource in database matching that id (${resourceId})`})
+    }else{
+      const dbres = await client.query(`SELECT * FROM comments WHERE resource_id = $1`, [resourceId])
+      if(dbres.rowCount < 1){
+        res.status(400).send({error: `No comments for id (${resourceId})`})
+      }else {
+        res.status(200).json(dbres.rows)
+      }
+    }
+  } catch (error) {
+    res.status(500).send({error: error, stack: error.stack})
+  }
+})
+
+//Get a single user's study list
+//Get all tags
+app.get("/tags", async(req,res) => {
+  try {
+    const dbres = await client.query(`SELECT * FROM tags`)
+    res.status(200).json(dbres.rows);
+  } catch (error) {
+    res.status(500).send({error: error, stack: error.stack})
+  }
+})
+
+//Get all resources for a single tag
+
+
+
+
+
+
 
 
 //Start the server on the given port
