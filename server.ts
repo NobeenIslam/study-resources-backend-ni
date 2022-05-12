@@ -155,9 +155,10 @@ app.get<{ id: string }, {}, {}>("/resources/:id/votes", async (req, res) => {
     FROM votes
     WHERE resource_id = $1 AND is_upvote = false;`, [resource_id])
 
+
     const totalVote = votesTrueRes.rowCount - votesFalseRes.rowCount
 
-    res.status(200).json({ votes: totalVote });
+    res.status(200).json({ upVotes: votesTrueRes.rowCount, downVotes: votesFalseRes.rowCount, totalVotes: totalVote });
   } catch (error) {
     res.status(500).send({ error: error, stack: error.stack })
   }
