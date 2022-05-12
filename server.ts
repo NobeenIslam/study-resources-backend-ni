@@ -40,8 +40,16 @@ app.get("/resources", async (req, res) => {
 app.get<{ id: string }, {}, {}>("/resources/:id", async (req, res) => {
   try {
     const resourceId = parseInt(req.params.id);
-    const dbres = await client.query('SELECT * FROM resources WHERE id = $1', [resourceId]);
+    const dbres = await client.query('SELECT * FROM resources WHERE resource_id = $1', [resourceId]);
     const rowCount = dbres.rowCount
+
+    /*
+    currentResource = dbres.Rows 
+    For each row of current Resource
+      append it's votes
+      append it's tags on 
+    endfor
+    */
     if (rowCount < 1) {
       res.status(400).send({ error: `No resource in database matching that id (${resourceId})` })
     } else {
@@ -66,7 +74,7 @@ app.get("/users", async (req, res) => {
 app.get<{ id: string }, {}, {}>("/resources/:id/comments", async (req, res) => {
   try {
     const resourceId = parseInt(req.params.id);
-    const isThereResource = await client.query('SELECT * FROM resources WHERE id = $1', [resourceId]);
+    const isThereResource = await client.query('SELECT * FROM resources WHERE resource_id = $1', [resourceId]);
     if (isThereResource.rowCount < 1) {
       res.status(400).send({ error: `No resource in database matching that id (${resourceId})` })
     } else {
@@ -86,7 +94,7 @@ app.get<{ id: string }, {}, {}>("/resources/:id/comments", async (req, res) => {
 app.get<{ id: string }, {}, {}>("/:id/studylist", async (req, res) => {
   try {
     const userId = parseInt(req.params.id)
-    const isThereUser = await client.query('SELECT * FROM users WHERE id = $1', [userId]);
+    const isThereUser = await client.query('SELECT * FROM users WHERE user_id = $1', [userId]);
     if (isThereUser.rowCount < 1) {
       res.status(400).send({ error: `No User in database matching that id (${userId})` })
     } else {
@@ -112,20 +120,20 @@ app.get("/tags", async (req, res) => {
 app.get<{ id: string }, {}, {}>("/tags/:id", async (req, res) => {
   try {
     const tagId = parseInt(req.params.id);
-    const isThereTag = await client.query('SELECT * FROM tags WHERE id = $1', [tagId]);
+    const isThereTag = await client.query('SELECT * FROM tags WHERE tag_id = $1', [tagId]);
     if (isThereTag.rowCount < 1) {
       res.status(400).send({ error: `No tag in database matching that id (${tagId})` })
     } else {
       const dbres = await client.query(`
       SELECT
-        tag_assignments.id AS assignment_id,
+        tag_assignments.tag_assignment_id,
         tag_assignments.tag_id,
         tags.name as tag_name,
         tag_assignments.resource_id,
         resources.*
       FROM tag_assignments
-      JOIN resources ON tag_assignments.resource_id = resources.id
-      JOIN tags ON tag_assignments.tag_id = tags.id
+      JOIN resources ON tag_assignments.resource_id = resources.resource_id
+      JOIN tags ON tag_assignments.tag_id = tags.tag_id
       WHERE tag_assignments.tag_id = $1
 
     `, [tagId]);
@@ -171,10 +179,10 @@ app.get<{ id: string }, {}, {}>("/resources/:id/author", async (req, res) => {
 
     const dbres = await client.query(`
     SELECT 
-      users.name,
+      users.name
     FROM users JOIN resources 
-    ON users.id = resources.author_id
-    WHERE resources.id = $1`, [resource_id])
+    ON users.user_id = resources.author_id
+    WHERE resources.resource_id = $1`, [resource_id])
 
     res.status(200).json(dbres.rows);
   } catch (error) {
