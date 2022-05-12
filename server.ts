@@ -164,7 +164,23 @@ app.get<{ id: string }, {}, {}>("/resources/:id/votes", async (req, res) => {
   }
 })
 
-//get author name for single re
+//we need a query to get author name for single resource block
+app.get<{ id: string }, {}, {}>("/resources/:id/author", async (req, res) => {
+  try {
+    const resource_id = parseInt(req.params.id)
+
+    const dbres = await client.query(`
+    SELECT 
+      users.name,
+    FROM users JOIN resources 
+    ON users.id = resources.author_id
+    WHERE resources.id = $1`, [resource_id])
+
+    res.status(200).json(dbres.rows);
+  } catch (error) {
+    res.status(500).send({ error: error, stack: error.stack })
+  }
+})
 
 
 
