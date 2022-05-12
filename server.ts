@@ -29,7 +29,21 @@ client.connect();
 //Get everything from resources table
 app.get("/resources", async (req, res) => {
   try {
-    const dbres = await client.query('SELECT * FROM resources ORDER BY creation_date DESC');
+
+    const dbres = await client.query(`    
+    SELECT *
+    FROM users JOIN resources 
+    ON users.user_id = resources.author_id
+   	ORDER BY creation_date DESC;`);
+
+    /*
+    currentResource = dbres.Rows 
+    For each row of current Resource
+      append it's votes
+      append it's tags on 
+    endfor
+    */
+
     res.status(200).json(dbres.rows);
   } catch (error) {
     res.status(500).send({ error: error, stack: error.stack })
@@ -43,13 +57,7 @@ app.get<{ id: string }, {}, {}>("/resources/:id", async (req, res) => {
     const dbres = await client.query('SELECT * FROM resources WHERE resource_id = $1', [resourceId]);
     const rowCount = dbres.rowCount
 
-    /*
-    currentResource = dbres.Rows 
-    For each row of current Resource
-      append it's votes
-      append it's tags on 
-    endfor
-    */
+
     if (rowCount < 1) {
       res.status(400).send({ error: `No resource in database matching that id (${resourceId})` })
     } else {
@@ -189,8 +197,6 @@ app.get<{ id: string }, {}, {}>("/resources/:id/author", async (req, res) => {
     res.status(500).send({ error: error, stack: error.stack })
   }
 })
-
-
 
 
 
