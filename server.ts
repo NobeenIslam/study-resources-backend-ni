@@ -208,3 +208,15 @@ if (!port) {
 app.listen(port, () => {
   console.log(`Server is up and running on port ${port}`);
 });
+
+//POST Requests (E+O)
+
+
+//PUT Requests (E+O)
+
+
+//DELETE Requests (N+F)
+
+
+
+
