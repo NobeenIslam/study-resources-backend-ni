@@ -3,6 +3,7 @@ import { config } from "dotenv";
 import express from "express";
 import cors from "cors";
 import { getResourceVotes } from "./utils/getResourceVotes";
+import { ResourceInfo, ResourceInfoWithVotes } from "./utils/Interfaces";
 
 config(); //Read .env file lines as though they were env vars.
 
@@ -37,22 +38,38 @@ app.get("/resources", async (req, res) => {
     ON users.user_id = resources.author_id
    	ORDER BY creation_date DESC;`);
 
-
     /*
     for each resource in dbres.Rows
-      getResourceVotes(res)
-      get that information into that resource
+      get the resourceInfo by calling getResource(...)
+      Iterate through object keys to add to resource
       append it to resorce
     */
-    const resourcesWithVotes = dbres.rows.map((oneResource) => {
-      const resourceId = oneResource.resource_id
-      //getResourceVotes()
-    })
 
-    dbres.rows[0]["upvote"] = 2
+    ///PROBABLY SHOULD COPY INTERFACE FROM FRONT END
 
-    console.log(dbres.rows[0]["upvote"])
-    res.status(200).json(dbres.rows);
+    const resourcesWithVotes = []
+    for (const resource of dbres.rows) {
+      const resourceVoteInfo = await getResourceVotes(client, resource.resource_id)
+      resource["votesInfo"] = resourceVoteInfo
+      resourcesWithVotes.push(resource)
+    }
+
+    //ERALIA SUPER FUNCTION
+
+    // const resourcesWithVotes = dbres.rows.map(
+    //   async (oneResource) => {
+
+    //     const resourceVoteInfo = await getResourceVotes(client, oneResource.resource_id)
+    //     oneResource["votesInfo"] = resourceVoteInfo
+    //     console.log(oneResource)
+    //     return oneResource
+    //   }
+    // )
+
+
+
+
+    res.status(200).json(resourcesWithVotes);
   } catch (error) {
     res.status(500).send({ error: error, stack: error.stack })
   }
