@@ -2,8 +2,8 @@ import { Client } from "pg";
 import { config } from "dotenv";
 import express from "express";
 import cors from "cors";
-import { getResourceVotes } from "./utils/getResourceVotes";
-import { ResourceInfo, ResourceInfoWithVotes } from "./utils/Interfaces";
+import { getResourceVotes } from "./utils1/getResourceVotes";
+import { ResourceInfo, ResourceInfoWithVotes } from "./utils1/Interfaces";
 
 config(); //Read .env file lines as though they were env vars.
 
@@ -183,9 +183,10 @@ app.get<{ id: string }, {}, {}>("/tags/:id", async (req, res) => {
 
 //Get votes for a single resource
 app.get<{ id: string }, {}, {}>("/resources/:id/votes", async (req, res) => {
+  const resource_id = parseInt(req.params.id)
   try {
     //DONT FORGET TO DO ERROR IF RESOURCE DOESNT EXIST> USE HELPERS!!!!
-    const resourceVoteInfo = await getResourceVotes(client, req.params.id)
+    const resourceVoteInfo = await getResourceVotes(client, resource_id)
 
     res.status(200).json(resourceVoteInfo)
   } catch (error) {

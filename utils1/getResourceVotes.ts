@@ -1,16 +1,15 @@
 import { Client } from "pg"
 
-export async function getResourceVotes(client: Client, resourceIdAsString: string) {
-    const resource_id = parseInt(resourceIdAsString)
+export async function getResourceVotes(client: Client, resourceId: number) {
     const votesTrueRes = await client.query(`
     SELECT *
     FROM votes
-    WHERE resource_id = $1 AND is_upvote = true;`, [resource_id])
+    WHERE resource_id = $1 AND is_upvote = true;`, [resourceId])
 
     const votesFalseRes = await client.query(`
     SELECT *
     FROM votes
-    WHERE resource_id = $1 AND is_upvote = false;`, [resource_id])
+    WHERE resource_id = $1 AND is_upvote = false;`, [resourceId])
 
 
     const totalVote = votesTrueRes.rowCount - votesFalseRes.rowCount
