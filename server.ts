@@ -2,6 +2,7 @@ import { Client } from "pg";
 import { config } from "dotenv";
 import express from "express";
 import cors from "cors";
+import { getResourceVotes } from "./utils/getResourceVotes";
 
 config(); //Read .env file lines as though they were env vars.
 
@@ -36,14 +37,21 @@ app.get("/resources", async (req, res) => {
     ON users.user_id = resources.author_id
    	ORDER BY creation_date DESC;`);
 
-    /*
-    currentResource = dbres.Rows 
-    For each row of current Resource
-      append it's votes
-      append it's tags on 
-    endfor
-    */
 
+    /*
+    for each resource in dbres.Rows
+      getResourceVotes(res)
+      get that information into that resource
+      append it to resorce
+    */
+    const resourcesWithVotes = dbres.rows.map((oneResource) => {
+      const resourceId = oneResource.resource_id
+      //getResourceVotes()
+    })
+
+    dbres.rows[0]["upvote"] = 2
+
+    console.log(dbres.rows[0]["upvote"])
     res.status(200).json(dbres.rows);
   } catch (error) {
     res.status(500).send({ error: error, stack: error.stack })
@@ -159,44 +167,16 @@ app.get<{ id: string }, {}, {}>("/tags/:id", async (req, res) => {
 //Get votes for a single resource
 app.get<{ id: string }, {}, {}>("/resources/:id/votes", async (req, res) => {
   try {
-    const resource_id = parseInt(req.params.id)
+    //DONT FORGET TO DO ERROR IF RESOURCE DOESNT EXIST> USE HELPERS!!!!
+    const resourceVoteInfo = await getResourceVotes(client, req.params.id)
 
-    const votesTrueRes = await client.query(`
-    SELECT *
-    FROM votes
-    WHERE resource_id = $1 AND is_upvote = true;`, [resource_id])
-
-    const votesFalseRes = await client.query(`
-    SELECT *
-    FROM votes
-    WHERE resource_id = $1 AND is_upvote = false;`, [resource_id])
-
-
-    const totalVote = votesTrueRes.rowCount - votesFalseRes.rowCount
-
-    res.status(200).json({ upVotes: votesTrueRes.rowCount, downVotes: votesFalseRes.rowCount, totalVotes: totalVote });
+    res.status(200).json(resourceVoteInfo)
   } catch (error) {
     res.status(500).send({ error: error, stack: error.stack })
   }
 })
 
-//we need a query to get author name for single resource block
-app.get<{ id: string }, {}, {}>("/resources/:id/author", async (req, res) => {
-  try {
-    const resource_id = parseInt(req.params.id)
 
-    const dbres = await client.query(`
-    SELECT 
-      users.name
-    FROM users JOIN resources 
-    ON users.user_id = resources.author_id
-    WHERE resources.resource_id = $1`, [resource_id])
-
-    res.status(200).json(dbres.rows);
-  } catch (error) {
-    res.status(500).send({ error: error, stack: error.stack })
-  }
-})
 
 
 
