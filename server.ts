@@ -300,6 +300,35 @@ app.post<{ id: string }, {}, { user_id: number; is_upvote: boolean }>(
   }
 );
 
+//post new tag
+//check if it already exists, if not add it to table
+app.post("/tags", async (req, res) => {
+  try {
+    const { user_id, tag_name } = req.body;
+    const userExist = await doesUserExist(user_id, client);
+    if (!userExist) {
+      res
+        .status(404)
+        .send({ error: `No User in database matching that id (${user_id})` });
+    }
+    const doesTagExist = await client.query(
+      "SELECT * FROM tags WHERE name=$1",
+      [tag_name]
+    );
+    if (doesTagExist.rowCount < 1) {
+      const dbres = await client.query(
+        "INSERT INTO tags (name) VALUES ($1) RETURNING *",
+        [tag_name]
+      );
+      res.status(200).json(dbres.rows);
+    } else {
+      res.status(409).send({ error: `This tag (${tag_name}) already exists` });
+    }
+  } catch (error) {
+    res.status(500).send({ error: error, stack: error.stack });
+  }
+});
+
 //PUT Requests (E+O)
 
 //DELETE Requests (N+F)
