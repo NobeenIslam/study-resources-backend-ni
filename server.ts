@@ -221,15 +221,6 @@ app.get<{ id: string }, {}, {}>("/resources/:id/votes", async (req, res) => {
 });
 
 
-//Start the server on the given port
-const port = process.env.PORT;
-if (!port) {
-  throw "Missing PORT environment variable.  Set it in .env file.";
-}
-app.listen(port, () => {
-  console.log(`Server is up and running on port ${port}`);
-});
-
 //POST Requests (E+O)
 
 //post for upvote and downvote
@@ -320,3 +311,12 @@ app.post("/tags", async (req, res) => {
 //PUT Requests (E+O)
 
 //DELETE Requests (N+F)
+
+//Start the server on the given port
+const port = process.env.PORT;
+if (!port) {
+  throw "Missing PORT environment variable.  Set it in .env file.";
+}
+app.listen(port, () => {
+  console.log(`Server is up and running on port ${port}`);
+});
