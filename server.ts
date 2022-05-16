@@ -2,14 +2,14 @@ import { Client } from "pg";
 import { config } from "dotenv";
 import express from "express";
 import cors from "cors";
-import { getResourceVotes } from "./utils1/getResourceVotes";
+import { getResourceVotes } from "./utils/getResourceVotes";
 import {
   ResourceInfo,
   PostedResource,
-} from "./utils1/Interfaces";
+} from "./utils/Interfaces";
 import { doesUserExist } from "./utils/doesUserExist";
 import { doesResourceExist } from "./utils/doesResourceExist";
-import { getTagsForResource } from "./utils1/getTagsForResource";
+import { getTagsForResource } from "./utils/getTagsForResource";
 
 
 config(); //Read .env file lines as though they were env vars.
