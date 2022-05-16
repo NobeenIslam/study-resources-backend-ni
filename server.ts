@@ -265,24 +265,24 @@ app.post<{}, {}, PostedResource>("/resources", async (req, res) => {
     if (dbres.rowCount < 1) {
       res.status(400).send({ error: "resource not posted" });
     } else {
-      let tagId: number;
+      let tag_id: number;
       for (const tag of tags) {
         const tagRes = await client.query(`SELECT * FROM tags WHERE name=$1`, [
           tag,
         ]);
         if (tagRes.rowCount > 0) {
-          tagId = tagRes.rows[0].tag_id;
+          tag_id = tagRes.rows[0].tag_id;
         } else {
           const createTag = await client.query(
             `INSERT INTO tags (name) VALUES ($1) RETURNING *`,
             [tag]
           );
-          tagId = createTag.rows[0].tag_id;
+          tag_id = createTag.rows[0].tag_id;
         }
         await client.query(
           `INSERT INTO tag_assignments (resource_id, tag_id) VALUES
           ($1, $2) RETURNING *`,
-          [dbres.rows[0].resource_id, tagId]
+          [dbres.rows[0].resource_id, tag_id]
         );
       }
       res.status(200).json(dbres.rows);
@@ -376,6 +376,79 @@ app.post("/tags", async (req, res) => {
     res.status(500).send({ error: error, stack: error.stack });
   }
 });
+
+//post new comment
+app.post<
+  { id: string },
+  {},
+  { body: string; author_id: number; resource_id: number }
+>("/resources/:id/comment", async (req, res) => {
+  try {
+    const resource_id = parseInt(req.params.id);
+    const { body, author_id } = req.body;
+    const userExist = doesUserExist(author_id, client);
+    const resourceExist = doesResourceExist(resource_id, client);
+    if (!userExist) {
+      res.status(404).send({ error: `user (${author_id})not found` });
+    } else if (!resourceExist) {
+      res.status(404).send({ error: `resource (${resource_id}) not found` });
+    } else {
+      const dbres = await client.query(
+        `INSERT INTO comments (body, resource_id, author_id) VALUES ($1, $2, $3) RETURNING *`,
+        [body, resource_id, author_id]
+      );
+      if (dbres.rowCount < 1) {
+        res.status(400).send({ error: "failed to post comment" });
+      } else {
+        res.status(200).json(dbres.rows);
+      }
+    }
+  } catch (error) {
+    res.status(500).send({ error: error, stack: error.stack });
+  }
+});
+
+//post resource to study list
+app.post<{ id: string }, {}, { resource_id: number }>(
+  "/users/:id/studylist",
+  async (req, res) => {
+    try {
+      const user_id = parseInt(req.params.id);
+      const { resource_id } = req.body;
+      const userExist = doesUserExist(user_id, client);
+      const resourceExist = doesResourceExist(resource_id, client);
+      if (!userExist) {
+        res.status(404).send({ error: `user (${user_id})not found` });
+      } else if (!resourceExist) {
+        res.status(404).send({ error: `resource (${resource_id}) not found` });
+      } else {
+        const checkIfPresent = await client.query(
+          `SELECT * FROM study_list WHERE author_id=$1 AND resource_id=$2`,
+          [user_id, resource_id]
+        );
+        if (checkIfPresent.rowCount > 0) {
+          res
+            .status(400)
+            .send({
+              error: `this resource ${resource_id} is already assigned to user ${user_id}'s study list`,
+            });
+        } else {
+          const dbres = await client.query(
+            `INSERT INTO study_list (author_id, resource_id) VALUES($1, $2) RETURNING *`,
+            [user_id, resource_id]
+          );
+          if (dbres.rowCount < 1) {
+            res.status(400).send({ error: "failed to assign to studylist" });
+          } else {
+            res.status(200).json(dbres.rows);
+          }
+        }
+      }
+    } catch (error) {
+      res.status(500).send({ error: error, stack: error.stack });
+    }
+  }
+);
 
 //PUT Requests (E+O)
 
