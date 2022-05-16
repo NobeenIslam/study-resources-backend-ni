@@ -31,6 +31,7 @@ export interface ResourceInfoWithVotes {
   evaluation?: string;
   justification?: string;
   votesInfo: { upvotes: number; downvotes: number; totalVotes: number }
+  tags: {tag_id: number; resource_id: number; tag_name: string}
 }
 
 export interface UserInterface {
