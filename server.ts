@@ -10,6 +10,8 @@ import {
 } from "./utils1/Interfaces";
 import { doesUserExist } from "./utils/doesUserExist";
 import { doesResourceExist } from "./utils/doesResourceExist";
+import { getTagsForResource } from "./utils1/getTagsForResource";
+
 
 config(); //Read .env file lines as though they were env vars.
 
@@ -47,19 +49,33 @@ app.get("/resources", async (req, res) => {
     for each resource in dbres.Rows
       get the resourceInfo by calling getResource(...)
       Iterate through object keys to add to resource
-      append it to resorce
+      append it to resource
+    */
+
+    /*
+    for each resource in dbres.rows
+      get all the tags for the resource
+      append it to resource
+
     */
 
     ///PROBABLY SHOULD COPY INTERFACE FROM FRONT END
 
-    const resourcesWithVotes = [];
+    const resourcesWithVotesAndTags = [];
     for (const resource of dbres.rows) {
       const resourceVoteInfo = await getResourceVotes(
         client,
         resource.resource_id
       );
+
+      const tagsForResource = await getTagsForResource(
+        client,
+        resource.resource_id
+      );
       resource["votesInfo"] = resourceVoteInfo;
-      resourcesWithVotes.push(resource);
+      resource["tags"] = tagsForResource;
+      resourcesWithVotesAndTags.push(resource);
+
     }
 
     //ERALIA SUPER FUNCTION
@@ -74,7 +90,9 @@ app.get("/resources", async (req, res) => {
     //   }
     // )
 
-    res.status(200).json(resourcesWithVotes);
+
+    res.status(200).json(resourcesWithVotesAndTags);
+
   } catch (error) {
     res.status(500).send({ error: error, stack: error.stack });
   }
