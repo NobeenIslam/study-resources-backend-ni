@@ -5,7 +5,6 @@ import cors from "cors";
 import { getResourceVotes } from "./utils1/getResourceVotes";
 import {
   ResourceInfo,
-  ResourceInfoWithVotes,
   PostedResource,
 } from "./utils1/Interfaces";
 import { doesUserExist } from "./utils/doesUserExist";
