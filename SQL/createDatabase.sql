@@ -18,7 +18,7 @@ CREATE TABLE resources (
   	description VARCHAR,
   	url VARCHAR,
   	origin VARCHAR,
-  	author_id INTEGER,
+  	author_id INTEGER NOT NULL,
   	creation_date TIMESTAMP DEFAULT current_timestamp,
   	content_type VARCHAR NOT NULL,
   	recommended_week VARCHAR,
