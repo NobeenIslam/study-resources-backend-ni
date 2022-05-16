@@ -3,10 +3,13 @@ import { config } from "dotenv";
 import express from "express";
 import cors from "cors";
 import { getResourceVotes } from "./utils1/getResourceVotes";
-import { ResourceInfo, ResourceInfoWithVotes } from "./utils1/Interfaces";
+import {
+  ResourceInfo,
+  ResourceInfoWithVotes,
+  PostedResource,
+} from "./utils1/Interfaces";
 import { doesUserExist } from "./utils/doesUserExist";
 import { doesResourceExist } from "./utils/doesResourceExist";
-
 
 config(); //Read .env file lines as though they were env vars.
 
@@ -49,11 +52,14 @@ app.get("/resources", async (req, res) => {
 
     ///PROBABLY SHOULD COPY INTERFACE FROM FRONT END
 
-    const resourcesWithVotes = []
+    const resourcesWithVotes = [];
     for (const resource of dbres.rows) {
-      const resourceVoteInfo = await getResourceVotes(client, resource.resource_id)
-      resource["votesInfo"] = resourceVoteInfo
-      resourcesWithVotes.push(resource)
+      const resourceVoteInfo = await getResourceVotes(
+        client,
+        resource.resource_id
+      );
+      resource["votesInfo"] = resourceVoteInfo;
+      resourcesWithVotes.push(resource);
     }
 
     //ERALIA SUPER FUNCTION
@@ -67,9 +73,6 @@ app.get("/resources", async (req, res) => {
     //     return oneResource
     //   }
     // )
-
-
-
 
     res.status(200).json(resourcesWithVotes);
   } catch (error) {
@@ -207,21 +210,87 @@ app.get<{ id: string }, {}, {}>("/tags/:id", async (req, res) => {
 
 //Get votes for a single resource
 app.get<{ id: string }, {}, {}>("/resources/:id/votes", async (req, res) => {
-  const resource_id = parseInt(req.params.id)
+  const resource_id = parseInt(req.params.id);
   try {
-
     //DONT FORGET TO DO ERROR IF RESOURCE DOESNT EXIST> USE HELPERS!!!!
-    const resourceVoteInfo = await getResourceVotes(client, resource_id)
+    const resourceVoteInfo = await getResourceVotes(client, resource_id);
 
-    res.status(200).json(resourceVoteInfo)
-
+    res.status(200).json(resourceVoteInfo);
   } catch (error) {
     res.status(500).send({ error: error, stack: error.stack });
   }
 });
 
-
 //POST Requests (E+O)
+
+//post new resource
+/*
+To resources table (title, url, description, author_id, origin, content_type, recommended week, evaluation, justification)
+Post tags to tag assignment table
+Create new tag if necessary
+
+*/
+app.post<{}, {}, PostedResource>("/resources", async (req, res) => {
+  try {
+    const {
+      title,
+      description,
+      url,
+      author_id,
+      origin,
+      content_type,
+      recommended_week,
+      evaluation,
+      justification,
+      tags,
+    } = req.body;
+
+    const dbres = await client.query(
+      `INSERT INTO resources 
+      (title, description, url, author_id, origin, content_type, recommended_week, evaluation, justification)
+      VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+      RETURNING *`,
+      [
+        title,
+        description,
+        url,
+        author_id,
+        origin,
+        content_type,
+        recommended_week,
+        evaluation,
+        justification,
+      ]
+    );
+    if (dbres.rowCount < 1) {
+      res.status(400).send({ error: "resource not posted" });
+    } else {
+      let tagId: number;
+      for (const tag of tags) {
+        const tagRes = await client.query(`SELECT * FROM tags WHERE name=$1`, [
+          tag,
+        ]);
+        if (tagRes.rowCount > 0) {
+          tagId = tagRes.rows[0].tag_id;
+        } else {
+          const createTag = await client.query(
+            `INSERT INTO tags (name) VALUES ($1) RETURNING *`,
+            [tag]
+          );
+          tagId = createTag.rows[0].tag_id;
+        }
+        await client.query(
+          `INSERT INTO tag_assignments (resource_id, tag_id) VALUES
+          ($1, $2) RETURNING *`,
+          [dbres.rows[0].resource_id, tagId]
+        );
+      }
+      res.status(200).json(dbres.rows);
+    }
+  } catch (error) {
+    res.status(500).send({ error: error, stack: error.stack });
+  }
+});
 
 //post for upvote and downvote
 //sending user_id, resource_id, is_upvote
