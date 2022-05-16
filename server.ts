@@ -259,47 +259,56 @@ app.post<{}, {}, PostedResource>("/resources", async (req, res) => {
       tags,
     } = req.body;
 
-    const dbres = await client.query(
-      `INSERT INTO resources 
+    const urlAlreadyPresent = await client.query(
+      `SELECT * FROM resources WHERE urk = $1`,
+      [url]
+    );
+    if (urlAlreadyPresent.rowCount > 0) {
+      res.status(400).send({ error: `url ${url} already exists in database ` });
+    } else {
+      const dbres = await client.query(
+        `INSERT INTO resources 
       (title, description, url, author_id, origin, content_type, recommended_week, evaluation, justification)
       VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) 
       RETURNING *`,
-      [
-        title,
-        description,
-        url,
-        author_id,
-        origin,
-        content_type,
-        recommended_week,
-        evaluation,
-        justification,
-      ]
-    );
-    if (dbres.rowCount < 1) {
-      res.status(400).send({ error: "resource not posted" });
-    } else {
-      let tag_id: number;
-      for (const tag of tags) {
-        const tagRes = await client.query(`SELECT * FROM tags WHERE name=$1`, [
-          tag,
-        ]);
-        if (tagRes.rowCount > 0) {
-          tag_id = tagRes.rows[0].tag_id;
-        } else {
-          const createTag = await client.query(
-            `INSERT INTO tags (name) VALUES ($1) RETURNING *`,
+        [
+          title,
+          description,
+          url,
+          author_id,
+          origin,
+          content_type,
+          recommended_week,
+          evaluation,
+          justification,
+        ]
+      );
+      if (dbres.rowCount < 1) {
+        res.status(400).send({ error: "resource not posted" });
+      } else {
+        let tag_id: number;
+        for (const tag of tags) {
+          const tagRes = await client.query(
+            `SELECT * FROM tags WHERE name=$1`,
             [tag]
           );
-          tag_id = createTag.rows[0].tag_id;
-        }
-        await client.query(
-          `INSERT INTO tag_assignments (resource_id, tag_id) VALUES
+          if (tagRes.rowCount > 0) {
+            tag_id = tagRes.rows[0].tag_id;
+          } else {
+            const createTag = await client.query(
+              `INSERT INTO tags (name) VALUES ($1) RETURNING *`,
+              [tag]
+            );
+            tag_id = createTag.rows[0].tag_id;
+          }
+          await client.query(
+            `INSERT INTO tag_assignments (resource_id, tag_id) VALUES
           ($1, $2) RETURNING *`,
-          [dbres.rows[0].resource_id, tag_id]
-        );
+            [dbres.rows[0].resource_id, tag_id]
+          );
+        }
+        res.status(200).json(dbres.rows);
       }
-      res.status(200).json(dbres.rows);
     }
   } catch (error) {
     res.status(500).send({ error: error, stack: error.stack });
