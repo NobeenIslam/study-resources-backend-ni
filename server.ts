@@ -204,26 +204,22 @@ app.get<{ id: string }, {}, {}>("/tags/:id", async (req, res) => {
     `,
         [tagId]
       );
-      if (dbres.rowCount < 1) {
-        res.status(404).send({ error: `No resources with (${tagId})` });
-      } else {
-        const resourcesWithVotesAndTags = [];
-        for (const resource of dbres.rows) {
-          const resourceVoteInfo = await getResourceVotes(
-            client,
-            resource.resource_id
-          );
+      const resourcesWithVotesAndTags = [];
+      for (const resource of dbres.rows) {
+        const resourceVoteInfo = await getResourceVotes(
+          client,
+          resource.resource_id
+        );
 
-          const tagsForResource = await getTagsForResource(
-            client,
-            resource.resource_id
-          );
-          resource["votesInfo"] = resourceVoteInfo;
-          resource["tags"] = tagsForResource;
-          resourcesWithVotesAndTags.push(resource);
-        }
-        res.status(200).json(dbres.rows);
+        const tagsForResource = await getTagsForResource(
+          client,
+          resource.resource_id
+        );
+        resource["votesInfo"] = resourceVoteInfo;
+        resource["tags"] = tagsForResource;
+        resourcesWithVotesAndTags.push(resource);
       }
+      res.status(200).json(dbres.rows);
     }
   } catch (error) {
     res.status(500).send({ error: error, stack: error.stack });
