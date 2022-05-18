@@ -264,7 +264,7 @@ app.post<{}, {}, PostedResource>("/resources", async (req, res) => {
     } = req.body;
 
     const urlAlreadyPresent = await client.query(
-      `SELECT * FROM resources WHERE urk = $1`,
+      `SELECT * FROM resources WHERE url = $1`,
       [url]
     );
     if (urlAlreadyPresent.rowCount > 0) {
