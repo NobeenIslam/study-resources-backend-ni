@@ -1,7 +1,8 @@
 export interface ResourceInfo {
   user_id: number;
   name: string;
-  is_faculty: boolean,
+  tag_id?: number;
+  is_faculty: boolean;
   resource_id: number;
   title: string;
   description: string;
@@ -13,8 +14,8 @@ export interface ResourceInfo {
   recommended_week?: string;
   evaluation?: string;
   justification?: string;
-  votesInfo: { upvotes: number; downvotes: number; totalVotes: number }
-  tags: {tag_id: number; resource_id: number; tag_name: string}
+  votesInfo: { upvotes: number; downvotes: number; totalVotes: number };
+  tags: { tag_id: number; resource_id: number; tag_name: string };
 }
 
 export interface UserInterface {
@@ -23,7 +24,7 @@ export interface UserInterface {
   is_faculty: boolean;
 }
 
-export interface PostedResource{
+export interface PostedResource {
   title: string;
   description: string;
   url: string;
