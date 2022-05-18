@@ -16,7 +16,7 @@ CREATE TABLE resources (
 	resource_id SERIAL PRIMARY KEY NOT NULL,
   	title VARCHAR NOT NULL,
   	description VARCHAR,
-  	url VARCHAR NOT NULL,
+  	url VARCHAR NOT NULL UNIQUE,
   	origin VARCHAR,
   	author_id INTEGER NOT NULL,
   	creation_date TIMESTAMP DEFAULT current_timestamp,
