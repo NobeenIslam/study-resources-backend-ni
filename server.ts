@@ -7,6 +7,7 @@ import { ResourceInfo, PostedResource } from "./utils/Interfaces";
 import { doesUserExist } from "./utils/doesUserExist";
 import { doesResourceExist } from "./utils/doesResourceExist";
 import { getTagsForResource } from "./utils/getTagsForResource";
+import Discord from "discord.js";
 
 config(); //Read .env file lines as though they were env vars.
 
@@ -30,6 +31,10 @@ app.use(cors()); //add CORS support to each following route handler
 
 const client = new Client(dbConfig);
 client.connect();
+
+const webhook = new Discord.WebhookClient({
+  url: "https://discord.com/api/webhooks/976631269007978536/uH2BvMudUxSnOnQe0Hp4ryQKMkK37Hlm5dw7JzgLZTmmXvEoEiIAceTtBMxZ3A38nbt-",
+});
 
 //Get everything from resources table
 app.get("/resources", async (req, res) => {
@@ -264,7 +269,7 @@ app.post<{}, {}, PostedResource>("/resources", async (req, res) => {
     } = req.body;
 
     const urlAlreadyPresent = await client.query(
-      `SELECT * FROM resources WHERE urk = $1`,
+      `SELECT * FROM resources WHERE url = $1`,
       [url]
     );
     if (urlAlreadyPresent.rowCount > 0) {
@@ -311,6 +316,13 @@ app.post<{}, {}, PostedResource>("/resources", async (req, res) => {
             [dbres.rows[0].resource_id, tag_id]
           );
         }
+        const authorName = await client.query(
+          `SELECT name FROM users WHERE user_id=$1 `,
+          [author_id]
+        );
+        webhook.send(
+          `There's a new resource from ${authorName.rows[0].name}! Check it out here: ${url}!`
+        );
         res.status(200).json(dbres.rows);
       }
     }
