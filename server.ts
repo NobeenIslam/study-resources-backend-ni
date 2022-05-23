@@ -33,7 +33,7 @@ const client = new Client(dbConfig);
 client.connect();
 
 const webhook = new Discord.WebhookClient({
-  url: "https://discord.com/api/webhooks/976631269007978536/uH2BvMudUxSnOnQe0Hp4ryQKMkK37Hlm5dw7JzgLZTmmXvEoEiIAceTtBMxZ3A38nbt-",
+  url: process.env.webhookUrl
 });
 
 //Get everything from resources table
