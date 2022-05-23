@@ -163,9 +163,29 @@ app.get<{ id: string }, {}, {}>("/:id/studylist", async (req, res) => {
         .send({ error: `No User in database matching that id (${user_id})` });
     } else {
       const dbres = await client.query(
-        `SELECT * FROM study_list WHERE author_id = $1`,
+        `SELECT resources.*,
+        users.name
+         FROM study_list 
+        JOIN resources ON study_list.resource_id = resources.resource_id 
+        JOIN users ON study_list.author_id = users.user_id
+        WHERE study_list.author_id = $1`,
         [user_id]
       );
+      const resourcesWithVotesAndTags = [];
+      for (const resource of dbres.rows) {
+        const resourceVoteInfo = await getResourceVotes(
+          client,
+          resource.resource_id
+        );
+
+        const tagsForResource = await getTagsForResource(
+          client,
+          resource.resource_id
+        );
+        resource["votesInfo"] = resourceVoteInfo;
+        resource["tags"] = tagsForResource;
+        resourcesWithVotesAndTags.push(resource);
+      }
       res.status(200).json(dbres.rows);
     }
   } catch (error) {
