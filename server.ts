@@ -7,7 +7,7 @@ import { ResourceInfo, PostedResource } from "./utils/Interfaces";
 import { doesUserExist } from "./utils/doesUserExist";
 import { doesResourceExist } from "./utils/doesResourceExist";
 import { getTagsForResource } from "./utils/getTagsForResource";
-import Discord from "discord.js";
+//import Discord from "discord.js";
 
 config(); //Read .env file lines as though they were env vars.
 
@@ -32,9 +32,9 @@ app.use(cors()); //add CORS support to each following route handler
 const client = new Client(dbConfig);
 client.connect();
 
-const webhook = new Discord.WebhookClient({
-  url: process.env.webhookUrl
-});
+// const webhook = new Discord.WebhookClient({
+//   url: process.env.webhookUrl
+// });
 
 //Get everything from resources table
 app.get("/resources", async (req, res) => {
@@ -340,9 +340,9 @@ app.post<{}, {}, PostedResource>("/resources", async (req, res) => {
           `SELECT name FROM users WHERE user_id=$1 `,
           [author_id]
         );
-        webhook.send(
-          `There's a new resource from ${authorName.rows[0].name}! Check it out here: ${url}!`
-        );
+        // webhook.send(
+        //   `There's a new resource from ${authorName.rows[0].name}! Check it out here: ${url}!`
+        // );
         res.status(200).json(dbres.rows);
       }
     }
