@@ -167,7 +167,7 @@ app.get<{ id: string }, {}, {}>("/:id/studylist", async (req, res) => {
         users.name
          FROM study_list 
         JOIN resources ON study_list.resource_id = resources.resource_id 
-        JOIN users ON study_list.author_id = users.user_id
+        JOIN users ON resources.author_id = users.user_id
         WHERE study_list.author_id = $1`,
         [user_id]
       );
@@ -544,6 +544,8 @@ app.delete<{ resource_id: string; comment_id: string }, {}, {}>(
 app.delete<{ user_id: string; resource_id: string }, {}, {}>(
   "/users/:user_id/studylist/:resource_id",
   async (req, res) => {
+    console.log("Delete")
+
     try {
       const user_id = parseInt(req.params.user_id);
       const resource_id = parseInt(req.params.resource_id);
