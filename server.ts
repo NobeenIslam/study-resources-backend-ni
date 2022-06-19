@@ -1,6 +1,6 @@
 import { Client } from "pg";
 import { config } from "dotenv";
-import express from "express";
+import express, { json } from "express";
 import cors from "cors";
 import { getResourceVotes } from "./utils/getResourceVotes";
 import { ResourceInfo, PostedResource } from "./utils/Interfaces";
@@ -358,6 +358,7 @@ app.post<{}, {}, PostedResource>("/resources", async (req, res) => {
 app.post<{ id: string }, {}, { user_id: number; is_upvote: boolean }>(
   "/resources/:id/votes",
   async (req, res) => {
+    console.log("Voting");
     try {
       const resource_id = parseInt(req.params.id);
       const { user_id, is_upvote } = req.body;
@@ -377,11 +378,16 @@ app.post<{ id: string }, {}, { user_id: number; is_upvote: boolean }>(
         });
       }
       //check if user has already voted for this resource
+
+      //if user hasn't voted insert vote in
+      //if user has voted check if the vote is different then edit
+      //if vote is the same don't do anything
       else {
         const hasExistingVote = await client.query(
           "SELECT * FROM votes WHERE user_id=$1 AND resource_id=$2",
           [user_id, resource_id]
         );
+
         //complete post request
         if (hasExistingVote.rowCount < 1) {
           const dbres = await client.query(
@@ -396,9 +402,16 @@ app.post<{ id: string }, {}, { user_id: number; is_upvote: boolean }>(
             });
           }
         } else {
-          res.status(400).send({
-            error: `User (${user_id}) has already voted for this resource!`,
-          });
+          const dbres = await client.query(
+            `
+          UPDATE votes
+          SET is_upvote = $1
+          WHERE user_id = $2 AND resource_id = $3
+          RETURNING *
+          `,
+            [is_upvote, user_id, resource_id]
+          );
+          res.status(200).json(dbres.rows);
         }
       }
     } catch (error) {
@@ -544,8 +557,6 @@ app.delete<{ resource_id: string; comment_id: string }, {}, {}>(
 app.delete<{ user_id: string; resource_id: string }, {}, {}>(
   "/users/:user_id/studylist/:resource_id",
   async (req, res) => {
-    console.log("Delete")
-
     try {
       const user_id = parseInt(req.params.user_id);
       const resource_id = parseInt(req.params.resource_id);
