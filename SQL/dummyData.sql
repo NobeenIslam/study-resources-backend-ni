@@ -1,5 +1,5 @@
 INSERT INTO users (name,is_faculty)
-VALUES ('James', true),('Blobs',false),('Michael Jackson', false),('Donald Trump', true),('Owenster', true);
+VALUES ('James', true),('Tommy',false),('Michael', false),('Alice', true),('Owenster', true);
 
 INSERT INTO resources (
   title,
@@ -102,9 +102,12 @@ VALUES ('react'),('JS'),('creative coding'),('git'),('SQL'),('express'), ('TS');
 
 INSERT INTO tag_assignments (tag_id, resource_id) VALUES
 (1,1),
-(2,1),
-(1,3),
-(5,4);
+(2,2),
+(3,3),
+(4,4),
+(5,5),
+(6,6),
+(7,7);
 
 INSERT INTO votes (user_id, resource_id, is_upvote) VALUES
 (1, 3, true),
