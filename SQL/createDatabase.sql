@@ -63,7 +63,7 @@ CREATE TABLE votes(
 	resource_id INTEGER,
 	is_upvote BOOLEAN NOT NULL,
 	FOREIGN KEY (user_id) REFERENCES users(user_id),
-	FOREIGN KEY (resource_id) REFERENCES users(user_id)
+	FOREIGN KEY (resource_id) REFERENCES resources(resource_id)
 );
 
 
